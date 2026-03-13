@@ -49,7 +49,7 @@ model OrganizationMember {
   orgId  String
   role   String
 
-  user User         @relation(fields: [userId], references: [id])
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   org  Organization @relation("OrgMembers", fields: [orgId], references: [id])
 
   @@unique([userId, orgId])
@@ -88,7 +88,7 @@ model SocialAccount {
   followers      Int
   engagementRate Float?
 
-  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@unique([creatorId, platform])
   @@index([creatorId])
@@ -101,7 +101,7 @@ model PortfolioItem {
   type      String
   order     Int    @default(0)
 
-  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@index([creatorId])
 }
@@ -114,7 +114,7 @@ model Collaboration {
   type      String
   date      DateTime?
 
-  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@index([creatorId])
 }
@@ -125,7 +125,7 @@ model TalentAgencyRoster {
   creatorId String
 
   agency  Organization   @relation(fields: [agencyId], references: [id])
-  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@unique([agencyId, creatorId])
   @@index([agencyId])
@@ -137,10 +137,12 @@ model CreatorManager {
   managerId String
   creatorId String
 
-  manager User @relation("manager", fields: [managerId], references: [id])
-  creator User @relation("creator", fields: [creatorId], references: [id])
+  manager User @relation("manager", fields: [managerId], references: [id], onDelete: Cascade)
+  creator User @relation("creator", fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@unique([managerId, creatorId])
+  @@index([managerId])
+  @@index([creatorId])
 }
 
 model MagicLinkToken {
@@ -152,15 +154,17 @@ model MagicLinkToken {
   metadata  Json?
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model List {
-  id    String @id @default(cuid())
-  name  String
-  orgId String
+  id        String   @id @default(cuid())
+  name      String
+  orgId     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   org   Organization @relation(fields: [orgId], references: [id])
   items ListItem[]
@@ -171,8 +175,8 @@ model ListItem {
   listId    String
   creatorId String
 
-  list    List           @relation(fields: [listId], references: [id])
-  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+  list    List           @relation(fields: [listId], references: [id], onDelete: Cascade)
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@unique([listId, creatorId])
   @@index([listId])
@@ -185,8 +189,8 @@ model Favorite {
   creatorId String
   createdAt DateTime @default(now())
 
-  user    User           @relation(fields: [userId], references: [id])
-  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@unique([userId, creatorId])
   @@index([userId])
