@@ -4,9 +4,10 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { TrpcModule } from './trpc/trpc.module';
 import { TrpcMiddleware } from './trpc/trpc.middleware';
+import { EmailModule } from './email/email.module';
 
 @Module({
-  imports: [DatabaseModule, TrpcModule],
+  imports: [DatabaseModule, TrpcModule, EmailModule],
   controllers: [AppController],
   providers: [AppService],
 })
