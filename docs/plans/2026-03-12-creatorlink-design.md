@@ -27,8 +27,9 @@ CreatorLink is a two-sided marketplace connecting influencers and UGC creators w
 
 ```
 apps/
-  web/          ← Next.js frontend
+  web/          ← Next.js frontend (mobile-first)
   api/          ← NestJS backend
+  mobile/       ← Expo / React Native (post-MVP)
 packages/
   ui/           ← Shared components + Storybook
   db/           ← Prisma schema + migrations
@@ -144,14 +145,14 @@ magic_link_tokens
 - [ ] Admin panel (basic)
 
 ### Nice to Have (post-MVP)
+- React Native / Expo shell (`apps/mobile`) sharing tRPC + business logic
 - Verified metrics via social APIs
 - Internal messaging system
-- Saved searches + notifications
+- Notifications system
 - Creator reviews and ratings
 - Payment integration
 - Advanced analytics for creators
 - Contract management
-- Native mobile app
 
 ---
 
@@ -162,3 +163,4 @@ magic_link_tokens
 - **Passwordless auth**: Reduces friction for users, eliminates password management overhead
 - **Storybook in shared UI package**: Component library is shared between web app and documented in isolation
 - **Multiple org owners**: Prevents account lockout and reflects real agency structures
+- **Mobile-first web + future native shell**: Web is designed mobile-first. Post-MVP, `apps/mobile` (Expo) is added to the monorepo, sharing tRPC types, business logic, and eventually UI primitives from `packages/ui`
