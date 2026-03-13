@@ -4,7 +4,11 @@ import type { PrismaClient } from '@repo/db';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
-  readonly client: PrismaClient = prisma;
+  protected readonly client: PrismaClient = prisma;
+
+  get db(): PrismaClient {
+    return this.client;
+  }
 
   async onModuleInit() {
     await this.client.$connect();

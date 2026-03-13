@@ -67,24 +67,29 @@ async function main() {
     },
   });
 
-  const brand = await prisma.organization.upsert({
-    where: { id: 'seed-brand-001' },
-    update: {},
-    create: {
-      id: 'seed-brand-001',
-      name: 'Cosmética Natural SA',
-      displayType: 'brand',
-      capabilities: ['can_search_creators'],
-      country: 'AR',
-      members: {
-        create: {
-          userId: brandUser.id,
-          role: 'owner',
+  const existingBrand = await prisma.organization.findFirst({
+    where: { name: 'Cosmética Natural SA' },
+  });
+
+  if (!existingBrand) {
+    await prisma.organization.create({
+      data: {
+        name: 'Cosmética Natural SA',
+        displayType: 'brand',
+        capabilities: ['can_search_creators'],
+        country: 'AR',
+        members: {
+          create: {
+            userId: brandUser.id,
+            role: 'owner',
+          },
         },
       },
-    },
-  });
-  console.log('Created brand:', brand.name);
+    });
+    console.log('Created brand: Cosmética Natural SA');
+  } else {
+    console.log('Brand already exists, skipping');
+  }
 
   console.log('Seeding complete!');
 }

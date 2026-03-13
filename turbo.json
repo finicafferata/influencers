@@ -28,7 +28,8 @@
       "cache": false
     },
     "db:migrate:deploy": {
-      "cache": false
+      "cache": false,
+      "dependsOn": ["db:generate"]
     }
   }
 }
