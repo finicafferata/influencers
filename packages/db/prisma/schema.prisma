@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  isAdmin   Boolean  @default(false)
+  suspended Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orgMemberships  OrganizationMember[]
+  creatorProfile  CreatorProfile?
+  magicTokens     MagicLinkToken[]
+  managedCreators CreatorManager[]     @relation("manager")
+  managedBy       CreatorManager[]     @relation("creator")
+  favorites       Favorite[]
+  contactsSent    Contact[]
+}
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  displayType  String
+  capabilities String[]
+  logo         String?
+  website      String?
+  country      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members OrganizationMember[] @relation("OrgMembers")
+  roster  TalentAgencyRoster[]
+  lists   List[]
+}
+
+model OrganizationMember {
+  id     String @id @default(cuid())
+  userId String
+  orgId  String
+  role   String
+
+  user User         @relation(fields: [userId], references: [id])
+  org  Organization @relation("OrgMembers", fields: [orgId], references: [id])
+
+  @@unique([userId, orgId])
+}
+
+model CreatorProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  username    String   @unique
+  country     String?
+  city        String?
+  bio         String?
+  contentType String?
+  niches      String[]
+  rates       Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user           User                 @relation(fields: [userId], references: [id])
+  socialAccounts SocialAccount[]
+  portfolio      PortfolioItem[]
+  collaborations Collaboration[]
+  agencyRoster   TalentAgencyRoster[]
+  listItems      ListItem[]
+  contactsReceived Contact[]          @relation("ContactToCreator")
+  favoredBy      Favorite[]
+}
+
+model SocialAccount {
+  id             String  @id @default(cuid())
+  creatorId      String
+  platform       String
+  handle         String
+  followers      Int
+  engagementRate Float?
+
+  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+}
+
+model PortfolioItem {
+  id        String @id @default(cuid())
+  creatorId String
+  url       String
+  type      String
+  order     Int    @default(0)
+
+  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+}
+
+model Collaboration {
+  id        String  @id @default(cuid())
+  creatorId String
+  brandName String
+  brandLogo String?
+  type      String
+  date      String?
+
+  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+}
+
+model TalentAgencyRoster {
+  id        String @id @default(cuid())
+  agencyId  String
+  creatorId String
+
+  agency  Organization   @relation(fields: [agencyId], references: [id])
+  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+
+  @@unique([agencyId, creatorId])
+}
+
+model CreatorManager {
+  id        String @id @default(cuid())
+  managerId String
+  creatorId String
+
+  manager User @relation("manager", fields: [managerId], references: [id])
+  creator User @relation("creator", fields: [creatorId], references: [id])
+
+  @@unique([managerId, creatorId])
+}
+
+model MagicLinkToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model List {
+  id    String @id @default(cuid())
+  name  String
+  orgId String
+
+  org   Organization @relation(fields: [orgId], references: [id])
+  items ListItem[]
+}
+
+model ListItem {
+  id        String @id @default(cuid())
+  listId    String
+  creatorId String
+
+  list    List           @relation(fields: [listId], references: [id])
+  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+
+  @@unique([listId, creatorId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  creatorId String
+  createdAt DateTime @default(now())
+
+  user    User           @relation(fields: [userId], references: [id])
+  creator CreatorProfile @relation(fields: [creatorId], references: [id])
+
+  @@unique([userId, creatorId])
+}
+
+model Contact {
+  id            String   @id @default(cuid())
+  fromUserId    String
+  toCreatorId   String
+  orgName       String
+  message       String
+  campaignBrief String?
+  createdAt     DateTime @default(now())
+
+  from    User           @relation(fields: [fromUserId], references: [id])
+  creator CreatorProfile @relation("ContactToCreator", fields: [toCreatorId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String?
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
