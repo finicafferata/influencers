@@ -24,6 +24,7 @@ model User {
   managedBy       CreatorManager[]     @relation("creator")
   favorites       Favorite[]
   contactsSent    Contact[]
+  notifications   Notification[]
 }
 
 model Organization {
@@ -52,6 +53,8 @@ model OrganizationMember {
   org  Organization @relation("OrgMembers", fields: [orgId], references: [id])
 
   @@unique([userId, orgId])
+  @@index([userId])
+  @@index([orgId])
 }
 
 model CreatorProfile {
@@ -86,6 +89,9 @@ model SocialAccount {
   engagementRate Float?
 
   creator CreatorProfile @relation(fields: [creatorId], references: [id])
+
+  @@unique([creatorId, platform])
+  @@index([creatorId])
 }
 
 model PortfolioItem {
@@ -96,17 +102,21 @@ model PortfolioItem {
   order     Int    @default(0)
 
   creator CreatorProfile @relation(fields: [creatorId], references: [id])
+
+  @@index([creatorId])
 }
 
 model Collaboration {
-  id        String  @id @default(cuid())
+  id        String    @id @default(cuid())
   creatorId String
   brandName String
   brandLogo String?
   type      String
-  date      String?
+  date      DateTime?
 
   creator CreatorProfile @relation(fields: [creatorId], references: [id])
+
+  @@index([creatorId])
 }
 
 model TalentAgencyRoster {
@@ -118,6 +128,8 @@ model TalentAgencyRoster {
   creator CreatorProfile @relation(fields: [creatorId], references: [id])
 
   @@unique([agencyId, creatorId])
+  @@index([agencyId])
+  @@index([creatorId])
 }
 
 model CreatorManager {
@@ -141,6 +153,8 @@ model MagicLinkToken {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model List {
@@ -161,6 +175,8 @@ model ListItem {
   creator CreatorProfile @relation(fields: [creatorId], references: [id])
 
   @@unique([listId, creatorId])
+  @@index([listId])
+  @@index([creatorId])
 }
 
 model Favorite {
@@ -173,6 +189,8 @@ model Favorite {
   creator CreatorProfile @relation(fields: [creatorId], references: [id])
 
   @@unique([userId, creatorId])
+  @@index([userId])
+  @@index([creatorId])
 }
 
 model Contact {
@@ -182,10 +200,14 @@ model Contact {
   orgName       String
   message       String
   campaignBrief String?
+  status        String   @default("pending")
   createdAt     DateTime @default(now())
 
   from    User           @relation(fields: [fromUserId], references: [id])
   creator CreatorProfile @relation("ContactToCreator", fields: [toCreatorId], references: [id])
+
+  @@index([fromUserId])
+  @@index([toCreatorId])
 }
 
 model Notification {
@@ -197,4 +219,8 @@ model Notification {
   read      Boolean  @default(false)
   link      String?
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
