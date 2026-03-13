@@ -7,6 +7,6 @@ export class TrpcMiddleware implements NestMiddleware {
   constructor(private readonly trpcRouter: TrpcRouter) {}
 
   use(req: Request, res: Response, _next: NextFunction) {
-    return this.trpcRouter.handleRequest(req as any, res as any);
+    return this.trpcRouter.handleRequest(req, res);
   }
 }

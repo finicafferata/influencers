@@ -5,7 +5,7 @@ import type { AppRouter } from '@repo/trpc';
 export const serverTrpc = createTRPCProxyClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'}/trpc`,
+      url: `${process.env.API_URL ?? 'http://localhost:3001'}/trpc`,
     }),
   ],
 });

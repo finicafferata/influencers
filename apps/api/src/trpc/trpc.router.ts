@@ -2,15 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter, type Context } from '@repo/trpc';
 import { DatabaseService } from '../database/database.service';
-import { prisma } from '@repo/db';
-import type { IncomingMessage, ServerResponse } from 'http';
+import type { Request, Response } from 'express';
 
 @Injectable()
 export class TrpcRouter {
   constructor(private readonly db: DatabaseService) {}
 
-  async handleRequest(req: IncomingMessage & { url: string }, res: ServerResponse) {
-    // Build a native Request from the incoming message
+  async handleRequest(req: Request, res: Response) {
     const url = `http://localhost${req.url}`;
     const headers: Record<string, string> = {};
     for (const [key, value] of Object.entries(req.headers)) {
@@ -19,9 +17,10 @@ export class TrpcRouter {
     }
 
     const chunks: Buffer[] = [];
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       req.on('data', (chunk: Buffer) => chunks.push(chunk));
       req.on('end', resolve);
+      req.on('error', reject);
     });
     const body = chunks.length ? Buffer.concat(chunks).toString() : undefined;
 
@@ -36,8 +35,8 @@ export class TrpcRouter {
       req: fetchReq,
       router: appRouter,
       createContext: (): Context => ({
-        userId: undefined, // will be set by auth middleware later
-        db: prisma,
+        userId: undefined,
+        db: this.db.db,
       }),
     });
 
