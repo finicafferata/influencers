@@ -108,7 +108,7 @@ export class EmailService implements OnModuleInit {
   }): Promise<void> {
     if (process.env.NODE_ENV === 'development') {
       this.logger.log(
-        `[DEV EMAIL PREVIEW]\nTo: ${params.to}\nSubject: ${params.subject}\nHTML: ${params.html}`,
+        `[DEV EMAIL PREVIEW] To: ${params.to} | Subject: ${params.subject}`,
       );
       return;
     }

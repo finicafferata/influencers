@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   if (!res.ok || !data.token) {
     return NextResponse.json(
-      (data as unknown) ?? { message: 'Invalid or expired token' },
+      { message: 'Invalid or expired token' },
       { status: res.status || 401 },
     );
   }
