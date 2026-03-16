@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { JwtService } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { DatabaseService } from '../database/database.service';
 import { SendMagicLinkDto } from './dto/send-magic-link.dto';
 
 describe('AuthController', () => {
@@ -19,6 +21,19 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: authService,
+        },
+        {
+          provide: JwtService,
+          useValue: { sign: jest.fn().mockReturnValue('signed-jwt') },
+        },
+        {
+          provide: DatabaseService,
+          useValue: {
+            db: {
+              creatorProfile: { findUnique: jest.fn().mockResolvedValue(null) },
+              organizationMember: { findFirst: jest.fn().mockResolvedValue(null) },
+            },
+          },
         },
       ],
     }).compile();
