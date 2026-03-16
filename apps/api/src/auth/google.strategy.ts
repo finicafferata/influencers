@@ -21,7 +21,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     _accessToken: string,
     _refreshToken: string,
     profile: Profile,
-  ): Promise<{ id: string; email: string; name: string | null; avatar: string | null }> {
+  ): Promise<{ id: string; email: string }> {
     const email = profile.emails?.[0]?.value;
     if (!email) {
       throw new Error('No email returned from Google OAuth profile');
@@ -30,16 +30,20 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const name = profile.displayName ?? undefined;
     const avatar = profile.photos?.[0]?.value ?? undefined;
 
-    const user = await this.db.db.user.upsert({
-      where: { email },
-      update: {},
-      create: {
-        email,
-        name,
-        avatar,
-      },
-    });
+    let user = await this.db.db.user.findUnique({ where: { email } });
+    if (!user) {
+      user = await this.db.db.user.create({ data: { email, name, avatar } });
+    } else if (!user.name) {
+      // pre-fill name/avatar for magic-link-first users on first Google login
+      user = await this.db.db.user.update({
+        where: { id: user.id },
+        data: {
+          name: name ?? user.name,
+          avatar: avatar ?? user.avatar,
+        },
+      });
+    }
 
-    return user;
+    return { id: user.id, email: user.email };
   }
 }

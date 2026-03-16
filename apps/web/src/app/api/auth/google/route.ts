@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export function GET() {
-  redirect(`${process.env.API_URL}/auth/google`);
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
+  redirect(`${apiUrl}/auth/google`);
 }

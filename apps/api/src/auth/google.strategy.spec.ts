@@ -52,8 +52,9 @@ function makeFakeUser(overrides: Partial<{
 function buildFakePrisma(overrides: Record<string, unknown> = {}) {
   return {
     user: {
-      upsert: jest.fn().mockResolvedValue(makeFakeUser()),
       findUnique: jest.fn().mockResolvedValue(null),
+      create: jest.fn().mockResolvedValue(makeFakeUser()),
+      update: jest.fn().mockResolvedValue(makeFakeUser()),
     },
     ...overrides,
   };
@@ -96,36 +97,57 @@ describe('GoogleStrategy', () => {
   describe('validate', () => {
     it('creates a new user with name and avatar on first login', async () => {
       const newUser = makeFakeUser();
-      fakePrisma.user.upsert.mockResolvedValue(newUser);
+      // findUnique returns null → new user path
+      fakePrisma.user.findUnique.mockResolvedValue(null);
+      fakePrisma.user.create.mockResolvedValue(newUser);
 
       const profile = makeProfile();
       const result = await strategy.validate('access-token', 'refresh-token', profile);
 
-      expect(fakePrisma.user.upsert).toHaveBeenCalledWith({
+      expect(fakePrisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
-        update: {},
-        create: {
+      });
+      expect(fakePrisma.user.create).toHaveBeenCalledWith({
+        data: {
           email: 'test@example.com',
           name: 'Test User',
           avatar: 'https://example.com/avatar.jpg',
         },
       });
-      expect(result).toEqual(newUser);
+      expect(result).toEqual({ id: newUser.id, email: newUser.email });
     });
 
-    it('returns existing user without re-creating when user already exists', async () => {
+    it('returns existing user without overwriting name when user already has a name', async () => {
       const existingUser = makeFakeUser({ id: 'existing-user-id', name: 'Existing Name' });
-      fakePrisma.user.upsert.mockResolvedValue(existingUser);
+      // findUnique returns an existing user with a name → no update
+      fakePrisma.user.findUnique.mockResolvedValue(existingUser);
 
-      const profile = makeProfile({ displayName: 'Existing Name' });
+      const profile = makeProfile({ displayName: 'Google Name' });
       const result = await strategy.validate('access-token', 'refresh-token', profile);
 
-      // upsert always runs, but update: {} means no overwrite of existing fields
-      expect(fakePrisma.user.upsert).toHaveBeenCalledTimes(1);
-      expect(fakePrisma.user.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({ update: {} }),
-      );
-      expect(result).toEqual(existingUser);
+      expect(fakePrisma.user.findUnique).toHaveBeenCalledTimes(1);
+      expect(fakePrisma.user.create).not.toHaveBeenCalled();
+      expect(fakePrisma.user.update).not.toHaveBeenCalled();
+      expect(result).toEqual({ id: existingUser.id, email: existingUser.email });
+    });
+
+    it('pre-fills name and avatar for magic-link-first users who have no name', async () => {
+      const existingUserNoName = makeFakeUser({ id: 'ml-user-id', name: null, avatar: null });
+      const updatedUser = makeFakeUser({ id: 'ml-user-id', name: 'Test User', avatar: 'https://example.com/avatar.jpg' });
+      fakePrisma.user.findUnique.mockResolvedValue(existingUserNoName);
+      fakePrisma.user.update.mockResolvedValue(updatedUser);
+
+      const profile = makeProfile();
+      const result = await strategy.validate('access-token', 'refresh-token', profile);
+
+      expect(fakePrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'ml-user-id' },
+        data: {
+          name: 'Test User',
+          avatar: 'https://example.com/avatar.jpg',
+        },
+      });
+      expect(result).toEqual({ id: updatedUser.id, email: updatedUser.email });
     });
 
     it('throws an error when the profile has no email', async () => {
