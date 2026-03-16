@@ -12,6 +12,23 @@ export async function GET(req: NextRequest) {
     `${apiUrl}/auth/verify?token=${encodeURIComponent(token)}`,
   );
 
-  const data = (await res.json()) as unknown;
-  return NextResponse.json(data, { status: res.status });
+  const data = (await res.json()) as { token?: string; isNewUser?: boolean };
+
+  if (!res.ok || !data.token) {
+    return NextResponse.json(
+      (data as unknown) ?? { message: 'Invalid or expired token' },
+      { status: res.status || 401 },
+    );
+  }
+
+  const response = NextResponse.json({ isNewUser: data.isNewUser });
+  response.cookies.set('session', data.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+  });
+
+  return response;
 }

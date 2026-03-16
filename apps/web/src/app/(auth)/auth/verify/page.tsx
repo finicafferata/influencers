@@ -22,16 +22,13 @@ export default function VerifyPage() {
           `/api/auth/verify?token=${encodeURIComponent(token!)}`,
         );
         const data = (await res.json()) as {
-          token?: string;
           isNewUser?: boolean;
           message?: string;
         };
 
-        if (!res.ok || !data.token) {
+        if (!res.ok) {
           throw new Error(data.message ?? 'Token inválido o expirado');
         }
-
-        localStorage.setItem('jwt', data.token);
 
         if (data.isNewUser) {
           router.replace('/onboarding/role');

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,10 +16,6 @@ export class AuthService {
   ) {}
 
   async sendMagicLink(email: string): Promise<{ message: string }> {
-    if (!email) {
-      throw new BadRequestException('Email is required');
-    }
-
     const user = await this.db.db.user.upsert({
       where: { email },
       update: {},
@@ -55,27 +50,27 @@ export class AuthService {
     });
 
     if (!record) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
     if (record.used) {
-      throw new UnauthorizedException('Token has already been used');
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
     if (record.expiresAt < new Date()) {
-      throw new UnauthorizedException('Token has expired');
+      throw new UnauthorizedException('Invalid or expired token');
     }
-
-    await this.db.db.magicLinkToken.update({
-      where: { id: record.id },
-      data: { used: true },
-    });
 
     const isNewUser = !record.user.name;
 
     const signedJwt = this.jwt.sign({
       sub: record.user.id,
       email: record.user.email,
+    });
+
+    await this.db.db.magicLinkToken.update({
+      where: { id: record.id },
+      data: { used: true },
     });
 
     return { token: signedJwt, isNewUser };

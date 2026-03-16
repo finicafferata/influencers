@@ -1,4 +1,4 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DatabaseService } from '../database/database.service';
@@ -106,14 +106,9 @@ describe('AuthService', () => {
     );
     expect(emailService.sendMagicLink).toHaveBeenCalledWith(
       'test@example.com',
-      expect.stringContaining('token='),
+      expect.stringMatching(/\/auth\/verify\?token=[a-f0-9]{64}/),
     );
     expect(result).toEqual({ message: 'Magic link sent' });
-  });
-
-  // 2. sendMagicLink — throws BadRequestException for empty email
-  it('throws BadRequestException when email is empty string', async () => {
-    await expect(service.sendMagicLink('')).rejects.toThrow(BadRequestException);
   });
 
   // 3. verifyMagicLink — returns isNewUser: true for new user (no name)
@@ -144,33 +139,33 @@ describe('AuthService', () => {
   });
 
   // 5. verifyMagicLink — throws UnauthorizedException for expired token
-  it('throws UnauthorizedException for an expired token', async () => {
+  it('throws UnauthorizedException with unified message for an expired token', async () => {
     fakePrisma.magicLinkToken.findUnique.mockResolvedValue(
       makeFakeToken({ expiresAt: new Date(Date.now() - 1000) }), // 1 second in the past
     );
 
     await expect(service.verifyMagicLink('abc123')).rejects.toThrow(
-      UnauthorizedException,
+      new UnauthorizedException('Invalid or expired token'),
     );
   });
 
   // 6. verifyMagicLink — throws UnauthorizedException for already-used token
-  it('throws UnauthorizedException for an already-used token', async () => {
+  it('throws UnauthorizedException with unified message for an already-used token', async () => {
     fakePrisma.magicLinkToken.findUnique.mockResolvedValue(
       makeFakeToken({ used: true }),
     );
 
     await expect(service.verifyMagicLink('abc123')).rejects.toThrow(
-      UnauthorizedException,
+      new UnauthorizedException('Invalid or expired token'),
     );
   });
 
   // 7. verifyMagicLink — throws UnauthorizedException for nonexistent token
-  it('throws UnauthorizedException for a nonexistent token', async () => {
+  it('throws UnauthorizedException with unified message for a nonexistent token', async () => {
     fakePrisma.magicLinkToken.findUnique.mockResolvedValue(null);
 
     await expect(service.verifyMagicLink('doesnotexist')).rejects.toThrow(
-      UnauthorizedException,
+      new UnauthorizedException('Invalid or expired token'),
     );
   });
 });

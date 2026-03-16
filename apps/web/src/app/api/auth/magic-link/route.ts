@@ -10,10 +10,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Invalid JSON body' }, { status: 400 });
   }
 
+  const email = typeof (body as Record<string, unknown>)?.email === 'string'
+    ? ((body as Record<string, unknown>).email as string).trim()
+    : '';
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Valid email required' }, { status: 400 });
+  }
+
   const res = await fetch(`${apiUrl}/auth/magic-link`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ email }),
   });
 
   const data = (await res.json()) as unknown;
