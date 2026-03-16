@@ -1,15 +1,30 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { TrpcModule } from './trpc/trpc.module';
 import { TrpcMiddleware } from './trpc/trpc.middleware';
 import { EmailModule } from './email/email.module';
 
 @Module({
-  imports: [DatabaseModule, TrpcModule, EmailModule],
+  imports: [
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 5 }]),
+    DatabaseModule,
+    TrpcModule,
+    EmailModule,
+    AuthModule,
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
