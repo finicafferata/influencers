@@ -1,0 +1,14 @@
+import { NextResponse } from 'next/server';
+
+// Clears the first-party session cookie (ISS-1.11).
+export async function POST() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set('session', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
+  return res;
+}

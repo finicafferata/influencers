@@ -29,6 +29,10 @@ export class EmailService implements OnModuleInit {
   }
 
   async sendMagicLink(to: string, link: string): Promise<void> {
+    // In dev there's no email provider — log the link so you can sign in locally.
+    if (process.env.NODE_ENV === 'development') {
+      this.logger.log(`[DEV MAGIC LINK] ${to} -> ${link}`);
+    }
     const safeLink = link.startsWith('https://') ? link : '#';
     const subject = 'Tu enlace de acceso a CreatorLink';
     const html = `

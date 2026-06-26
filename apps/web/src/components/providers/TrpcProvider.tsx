@@ -29,7 +29,9 @@ export function TrpcProvider({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'}/trpc`,
+          // Same-origin first-party proxy (REVIEW-01 C1). The httpOnly session
+          // cookie is sent automatically; no cross-site credentials needed.
+          url: '/api/trpc',
         }),
       ],
     }),

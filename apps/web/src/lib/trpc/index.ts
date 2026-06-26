@@ -1,2 +1,2 @@
 export { trpc } from './client';
-export { serverTrpc } from './server';
+export { getServerTrpc } from './server';

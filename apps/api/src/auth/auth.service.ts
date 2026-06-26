@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
 import { DatabaseService } from '../database/database.service';
@@ -41,9 +38,9 @@ export class AuthService {
     return { message: 'Magic link sent' };
   }
 
-  async verifyMagicLink(
-    token: string,
-  ): Promise<{ token: string; isNewUser: boolean }> {
+  // Returns only the session JWT. Post-login routing is decided by the
+  // client via `me.bootstrap` (REVIEW-01 C2 — `isNewUser` removed).
+  async verifyMagicLink(token: string): Promise<{ token: string }> {
     const record = await this.db.db.magicLinkToken.findUnique({
       where: { token },
       include: { user: true },
@@ -61,8 +58,6 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    const isNewUser = !record.user.name;
-
     const signedJwt = this.jwt.sign({
       sub: record.user.id,
       email: record.user.email,
@@ -73,6 +68,6 @@ export class AuthService {
       data: { used: true },
     });
 
-    return { token: signedJwt, isNewUser };
+    return { token: signedJwt };
   }
 }

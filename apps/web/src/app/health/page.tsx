@@ -1,9 +1,10 @@
-import { serverTrpc } from '@/lib/trpc/server';
+import { getServerTrpc } from '@/lib/trpc/server';
 
 export default async function HealthPage() {
   let status = 'unknown';
   try {
-    const result = await serverTrpc.health.check.query();
+    const trpc = await getServerTrpc();
+    const result = await trpc.health.check.query();
     status = result.status;
   } catch {
     status = 'error — API not running';

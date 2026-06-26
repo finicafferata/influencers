@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { DatabaseService } from '../database/database.service';
 import { SendMagicLinkDto } from './dto/send-magic-link.dto';
 
 describe('AuthController', () => {
@@ -11,29 +10,19 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     authService = {
-      sendMagicLink: jest.fn().mockResolvedValue({ message: 'Magic link sent' }),
-      verifyMagicLink: jest.fn().mockResolvedValue({ token: 'signed-jwt', isNewUser: false }),
+      sendMagicLink: jest
+        .fn()
+        .mockResolvedValue({ message: 'Magic link sent' }),
+      verifyMagicLink: jest.fn().mockResolvedValue({ token: 'signed-jwt' }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        {
-          provide: AuthService,
-          useValue: authService,
-        },
+        { provide: AuthService, useValue: authService },
         {
           provide: JwtService,
           useValue: { sign: jest.fn().mockReturnValue('signed-jwt') },
-        },
-        {
-          provide: DatabaseService,
-          useValue: {
-            db: {
-              creatorProfile: { findUnique: jest.fn().mockResolvedValue(null) },
-              organizationMember: { findFirst: jest.fn().mockResolvedValue(null) },
-            },
-          },
         },
       ],
     }).compile();
@@ -41,7 +30,6 @@ describe('AuthController', () => {
     controller = module.get<AuthController>(AuthController);
   });
 
-  // 1. POST /auth/magic-link — delegates to authService.sendMagicLink
   it('calls authService.sendMagicLink with the email from the DTO', async () => {
     const dto: SendMagicLinkDto = { email: 'user@example.com' };
     const result = await controller.sendLink(dto);
@@ -50,17 +38,18 @@ describe('AuthController', () => {
     expect(result).toEqual({ message: 'Magic link sent' });
   });
 
-  // 2. GET /auth/verify — delegates to authService.verifyMagicLink
-  it('calls authService.verifyMagicLink with the token query param', async () => {
+  // verify returns only the token; routing is decided client-side via me.bootstrap.
+  it('calls authService.verifyMagicLink and returns just the token', async () => {
     const result = await controller.verify('test-token-abc');
 
     expect(authService.verifyMagicLink).toHaveBeenCalledWith('test-token-abc');
-    expect(result).toEqual({ token: 'signed-jwt', isNewUser: false });
+    expect(result).toEqual({ token: 'signed-jwt' });
   });
 
-  // 3. GET /auth/google/callback — new user (no creatorProfile, no orgMember)
-  it('googleCallback: new user sets httpOnly cookie and redirects to /onboarding/role', async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  // googleCallback no longer sets a cookie or queries the DB; it hands the JWT
+  // to the web app via a first-party redirect (REVIEW-01 C1).
+  it('googleCallback redirects to the web callback with the signed token', () => {
+    const module = Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         { provide: AuthService, useValue: authService },
@@ -68,73 +57,20 @@ describe('AuthController', () => {
           provide: JwtService,
           useValue: { sign: jest.fn().mockReturnValue('mock-jwt') },
         },
-        {
-          provide: DatabaseService,
-          useValue: {
-            db: {
-              creatorProfile: { findUnique: jest.fn().mockResolvedValue(null) },
-              organizationMember: { findFirst: jest.fn().mockResolvedValue(null) },
-            },
-          },
-        },
       ],
-    }).compile();
+    });
 
-    const ctrl = module.get<AuthController>(AuthController);
+    return module.compile().then((m) => {
+      const ctrl = m.get<AuthController>(AuthController);
+      const req = { user: { id: 'user-1', email: 'new@example.com' } } as never;
+      const redirect = jest.fn();
+      const res = { redirect } as never;
 
-    const req = { user: { id: 'user-1', email: 'new@example.com' } } as any;
-    const res = { cookie: jest.fn(), redirect: jest.fn() } as any;
+      ctrl.googleCallback(req, res);
 
-    await ctrl.googleCallback(req, res);
-
-    expect(res.cookie).toHaveBeenCalledWith(
-      'session',
-      'mock-jwt',
-      expect.objectContaining({ httpOnly: true }),
-    );
-    expect(res.redirect).toHaveBeenCalledWith(
-      expect.stringContaining('/onboarding/role'),
-    );
-  });
-
-  // 4. GET /auth/google/callback — returning user (has creatorProfile)
-  it('googleCallback: returning user sets httpOnly cookie and redirects to /dashboard', async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [AuthController],
-      providers: [
-        { provide: AuthService, useValue: authService },
-        {
-          provide: JwtService,
-          useValue: { sign: jest.fn().mockReturnValue('mock-jwt') },
-        },
-        {
-          provide: DatabaseService,
-          useValue: {
-            db: {
-              creatorProfile: {
-                findUnique: jest.fn().mockResolvedValue({ id: 'cp-1', userId: 'user-2' }),
-              },
-              organizationMember: { findFirst: jest.fn().mockResolvedValue(null) },
-            },
-          },
-        },
-      ],
-    }).compile();
-
-    const ctrl = module.get<AuthController>(AuthController);
-
-    const req = { user: { id: 'user-2', email: 'returning@example.com' } } as any;
-    const res = { cookie: jest.fn(), redirect: jest.fn() } as any;
-
-    await ctrl.googleCallback(req, res);
-
-    expect(res.cookie).toHaveBeenCalledWith(
-      'session',
-      'mock-jwt',
-      expect.objectContaining({ httpOnly: true }),
-    );
-    expect(res.redirect).toHaveBeenCalledWith(
-      expect.stringContaining('/dashboard'),
-    );
+      expect(redirect).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/google/callback?token=mock-jwt'),
+      );
+    });
   });
 });

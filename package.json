@@ -7,9 +7,11 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
+    "test:e2e": "pnpm --filter @repo/web test:e2e",
     "storybook": "turbo storybook"
   },
   "devDependencies": {
-    "turbo": "^2.0.0"
+    "turbo": "^2.0.0",
+    "tsx": "^4.19.4"
   }
 }

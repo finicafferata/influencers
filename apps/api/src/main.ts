@@ -1,3 +1,4 @@
+import 'dotenv/config'; // load apps/api/.env in local dev (no-op when env comes from the platform)
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';

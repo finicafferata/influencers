@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     `${apiUrl}/auth/verify?token=${encodeURIComponent(token)}`,
   );
 
-  const data = (await res.json()) as { token?: string; isNewUser?: boolean };
+  const data = (await res.json()) as { token?: string };
 
   if (!res.ok || !data.token) {
     return NextResponse.json(
@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const response = NextResponse.json({ isNewUser: data.isNewUser });
+  // Routing after verify is decided by me.bootstrap on the client (no isNewUser).
+  const response = NextResponse.json({ ok: true });
   response.cookies.set('session', data.token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

@@ -4,13 +4,12 @@
   "private": true,
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./constants": "./src/constants.ts"
   },
   "dependencies": {
+    "@repo/db": "workspace:*",
     "@trpc/server": "^11.0.0",
     "zod": "^3.22.0"
-  },
-  "devDependencies": {
-    "@repo/db": "workspace:*"
   }
 }
