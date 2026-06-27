@@ -8,7 +8,7 @@
     "./constants": "./src/constants.ts"
   },
   "scripts": {
-    "test": "node --import tsx --test \"src/**/*.test.ts\""
+    "test": "node --import tsx --test src/*.test.ts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
