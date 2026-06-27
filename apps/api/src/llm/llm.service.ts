@@ -16,11 +16,17 @@ export class LlmService implements LlmClient, OnModuleInit {
   private apiKey: string | null = null;
   private baseUrl = 'https://api.openai.com/v1';
   private model = 'gpt-4o-mini';
+  // Hard ceiling so a hung/slow provider can't stall the tRPC request. The
+  // callers (match.parseBrief / rationales) catch the abort and fall back to
+  // the heuristic path. Overridable via LLM_TIMEOUT_MS. See MVP-PUNCHLIST §3.5.
+  private timeoutMs = 12_000;
 
   onModuleInit() {
     this.apiKey = process.env.LLM_API_KEY ?? null;
     if (process.env.LLM_BASE_URL) this.baseUrl = process.env.LLM_BASE_URL;
     if (process.env.LLM_MODEL) this.model = process.env.LLM_MODEL;
+    const t = Number(process.env.LLM_TIMEOUT_MS);
+    if (Number.isFinite(t) && t > 0) this.timeoutMs = t;
     if (!this.apiKey) {
       this.logger.warn(
         'LLM_API_KEY not set — AI match runs in heuristic mode (no LLM).',
@@ -39,6 +45,7 @@ export class LlmService implements LlmClient, OnModuleInit {
   ): Promise<string> {
     const res = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
+      signal: AbortSignal.timeout(this.timeoutMs),
       headers: {
         'content-type': 'application/json',
         authorization: `Bearer ${this.apiKey}`,

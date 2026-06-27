@@ -55,7 +55,12 @@ describe('EmailService', () => {
         'user@example.com',
         'https://example.com/magic',
       );
-      expect(loggerLogSpy).toHaveBeenCalledTimes(1);
+      // Dev mode emits two log lines: the dedicated magic-link line (so you can
+      // sign in locally) plus the shared [DEV EMAIL PREVIEW] line.
+      expect(loggerLogSpy).toHaveBeenCalledTimes(2);
+      expect(loggerLogSpy).toHaveBeenCalledWith(
+        '[DEV MAGIC LINK] user@example.com -> https://example.com/magic',
+      );
       expect(mockSend).not.toHaveBeenCalled();
     });
 

@@ -48,7 +48,11 @@ export function matchScore(criteria: ParsedCriteria, c: ScoreCandidate): ScoreRe
   const niche =
     criteria.niches.length === 0
       ? 1
-      : c.niches.filter((n) => criteria.niches.includes(n)).length / criteria.niches.length;
+      : // clamp01 guards the [0,1] contract against duplicate candidate niches
+        // (matched count could otherwise exceed criteria.length → score > 1).
+        clamp01(
+          c.niches.filter((n) => criteria.niches.includes(n)).length / criteria.niches.length,
+        );
 
   const reach = reachFit(c.maxFollowers, criteria.followersMin, criteria.followersMax);
 
