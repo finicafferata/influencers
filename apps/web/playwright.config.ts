@@ -31,9 +31,11 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 
   // Start API first, then web. Health-check each root URL before running tests.
+  // In CI use a single-boot command (no --watch): nest's watch mode recompiles
+  // and restarts, racing the port release → EADDRINUSE. Locally, dev/watch is fine.
   webServer: [
     {
-      command: 'pnpm --filter api dev',
+      command: process.env.CI ? 'pnpm --filter api start:e2e' : 'pnpm --filter api dev',
       url: API_URL,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

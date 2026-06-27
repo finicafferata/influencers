@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nest build",
     "dev": "NODE_OPTIONS='--import tsx' nest start --watch",
+    "start:e2e": "node --import tsx src/main.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
