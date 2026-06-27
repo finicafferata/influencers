@@ -43,7 +43,10 @@ export default defineConfig({
       stderr: 'pipe',
     },
     {
-      command: 'pnpm --filter @repo/web dev',
+      // Pin the web port explicitly: CI sets PORT=3002 for the API, and Next.js
+      // also reads PORT — without the flag, `next dev` would try 3002 and collide
+      // with the API. The CLI flag overrides the PORT env.
+      command: `pnpm --filter @repo/web exec next dev --port ${WEB_PORT}`,
       url: WEB_URL,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
