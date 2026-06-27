@@ -277,3 +277,19 @@ model MatchFeedback {
   @@index([orgId])
   @@index([creatorId])
 }
+
+/// Append-only funnel/analytics log for launch validation
+/// (publish → search → contact → response). Intentionally FK-free so recording
+/// is fire-and-forget (never blocks a request) and history survives row deletes.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String // profile_published | search_performed | contact_sent | contact_responded
+  userId    String? // actor (null for anonymous/public)
+  orgId     String? // acting org, when relevant
+  creatorId String? // subject creator, when relevant
+  meta      Json? // small extras: { status }, { total, hasFilters }, …
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([createdAt])
+}

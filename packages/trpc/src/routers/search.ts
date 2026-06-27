@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { router, orgProcedure } from '../trpc';
 import { PLATFORM_SET, CONTENT_TYPES } from '../constants';
 import { buildCreatorWhere, CREATOR_CARD_INCLUDE, toCardPayload } from '../retrieval';
+import { recordEvent } from '../analytics';
 import type { Prisma } from '@repo/db';
 
 const searchInput = z.object({
@@ -57,6 +58,19 @@ export const searchRouter = router({
       const hasMore = rows.length > input.limit;
       const page = hasMore ? rows.slice(0, input.limit) : rows;
       const items = page.map(toCardPayload);
+
+      // funnel: count one search per first page only (not each infinite-scroll
+      // fetch), so the metric reflects distinct search actions.
+      if (!input.cursor) {
+        const { sort: _s, cursor: _c, limit: _l, q, ...filters } = input;
+        const hasFilters =
+          !!q || Object.values(filters).some((v) => (Array.isArray(v) ? v.length > 0 : v != null));
+        void recordEvent(ctx.db, 'search_performed', {
+          userId: ctx.userId,
+          orgId: ctx.orgId,
+          meta: { total, hasFilters },
+        });
+      }
 
       return {
         items,

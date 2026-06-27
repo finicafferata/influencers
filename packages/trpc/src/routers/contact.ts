@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, orgProcedure, creatorProcedure, rateLimit } from '../trpc';
+import { recordEvent } from '../analytics';
 
 function isUniqueViolation(err: unknown): boolean {
   return (
@@ -40,8 +41,8 @@ export const contactRouter = router({
       const orgName = org?.name ?? 'Una marca';
 
       try {
-        return await ctx.db.$transaction(async (tx) => {
-          const contact = await tx.contact.create({
+        const contact = await ctx.db.$transaction(async (tx) => {
+          const created = await tx.contact.create({
             data: {
               fromUserId: ctx.userId!,
               toCreatorId: creator.id,
@@ -60,8 +61,15 @@ export const contactRouter = router({
               link: '/dashboard/contacts',
             },
           });
-          return contact;
+          return created;
         });
+        // funnel: a real new contact was sent (dedupe conflicts throw above).
+        void recordEvent(ctx.db, 'contact_sent', {
+          userId: ctx.userId,
+          orgId: ctx.orgId,
+          creatorId: creator.id,
+        });
+        return contact;
       } catch (err) {
         if (isUniqueViolation(err)) {
           throw new TRPCError({
@@ -95,8 +103,8 @@ export const contactRouter = router({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'La solicitud ya fue resuelta' });
       }
 
-      return ctx.db.$transaction(async (tx) => {
-        const updated = await tx.contact.update({
+      const updated = await ctx.db.$transaction(async (tx) => {
+        const u = await tx.contact.update({
           where: { id: contact.id },
           data: { status: input.status },
         });
@@ -112,8 +120,15 @@ export const contactRouter = router({
             link: '/search',
           },
         });
-        return updated;
+        return u;
       });
+      // funnel: contact_responded (accepted | declined)
+      void recordEvent(ctx.db, 'contact_responded', {
+        userId: ctx.userId,
+        creatorId: ctx.creatorId,
+        meta: { status: input.status },
+      });
+      return updated;
     }),
 
   /** Creators this caller has already contacted — powers the "Contactado" state. */

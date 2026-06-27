@@ -185,4 +185,95 @@ export const adminRouter = router({
       const page = hasMore ? rows.slice(0, limit) : rows;
       return { items: page, nextCursor: hasMore ? page[page.length - 1].id : null };
     }),
+
+  /**
+   * Launch-validation funnel: publish → search → contact → response, over the
+   * last `days`. Returns per-stage counts + the step-to-step conversion rates.
+   */
+  funnel: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(365).default(30) }).optional())
+    .query(async ({ ctx, input }) => {
+      const days = input?.days ?? 30;
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const grouped = await ctx.db.analyticsEvent.groupBy({
+        by: ['type'],
+        where: { createdAt: { gte: since } },
+        _count: { _all: true },
+      });
+      const count = (t: string) => grouped.find((g) => g.type === t)?._count._all ?? 0;
+      const published = count('profile_published');
+      const searched = count('search_performed');
+      const contacted = count('contact_sent');
+      const responded = count('contact_responded');
+      const pct = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 1000) / 10 : null);
+      return {
+        days,
+        since,
+        stages: { published, searched, contacted, responded },
+        conversion: {
+          searchToContact: pct(contacted, searched), // % of searches that led to a contact
+          contactToResponse: pct(responded, contacted), // % of contacts that got a response
+        },
+      };
+    }),
+
+  /**
+   * Bulk cold-start seeding for real creators. Idempotent: rows whose username
+   * already exists are skipped (not errored), so the same batch can be re-run.
+   * Returns a per-row result so an operator can see exactly what happened.
+   */
+  bulkSeedCreators: adminProcedure
+    .input(
+      z.object({
+        creators: z
+          .array(
+            profileFieldsSchema.extend({
+              email: z.string().email(),
+              name: z.string().trim().max(120).optional(),
+              username: usernameSchema,
+              publish: z.boolean().default(false),
+              socialAccounts: z.array(socialAccountSchema).default([]),
+            }),
+          )
+          .min(1)
+          .max(200),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const results: { username: string; status: 'created' | 'skipped' | 'error'; message?: string }[] = [];
+      for (const row of input.creators) {
+        const { email, name, username, publish, socialAccounts, ...fields } = row;
+        try {
+          const taken = await ctx.db.creatorProfile.findUnique({ where: { username }, select: { id: true } });
+          if (taken) {
+            results.push({ username, status: 'skipped', message: 'username ya existe' });
+            continue;
+          }
+          const user = await ctx.db.user.upsert({
+            where: { email },
+            update: { name: name ?? undefined },
+            create: { email, name },
+          });
+          const profile = await ctx.db.creatorProfile.create({ data: { userId: user.id, username, ...fields } });
+          for (const acct of socialAccounts) {
+            await ctx.db.socialAccount.create({
+              data: { ...acct, creatorId: profile.id, verified: false, verificationSource: 'self_reported' },
+            });
+          }
+          if (publish && socialAccounts.length > 0 && (fields.niches?.length ?? 0) > 0 && fields.contentType) {
+            await ctx.db.creatorProfile.update({ where: { id: profile.id }, data: { published: true } });
+          }
+          results.push({ username, status: 'created' });
+        } catch (err) {
+          results.push({ username, status: 'error', message: err instanceof Error ? err.message : 'error' });
+        }
+      }
+      const summary = {
+        total: results.length,
+        created: results.filter((r) => r.status === 'created').length,
+        skipped: results.filter((r) => r.status === 'skipped').length,
+        errored: results.filter((r) => r.status === 'error').length,
+      };
+      return { summary, results };
+    }),
 });

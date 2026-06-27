@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import type { Prisma } from '@repo/db';
 import { router, protectedProcedure, creatorProcedure, publicProcedure, rateLimit, requireFeature } from '../trpc';
+import { recordEvent } from '../analytics';
 import { AGE_BAND_SET, GENDER_SET } from '../constants';
 import {
   usernameSchema,
@@ -181,7 +182,16 @@ export const creatorRouter = router({
         message: `Faltan campos para publicar: ${missing.join(', ')}`,
       });
     }
-    return ctx.db.creatorProfile.update({ where: { id: ctx.creatorId }, data: { published: true } });
+    const published = await ctx.db.creatorProfile.update({
+      where: { id: ctx.creatorId },
+      data: { published: true },
+    });
+    // funnel: profile_published (top of the supply funnel)
+    void recordEvent(ctx.db, 'profile_published', {
+      userId: ctx.userId,
+      creatorId: ctx.creatorId,
+    });
+    return published;
   }),
 
   unpublish: creatorProcedure.mutation(async ({ ctx }) => {
