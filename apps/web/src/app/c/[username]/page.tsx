@@ -9,6 +9,7 @@ import { ViewPing } from '@/components/ViewPing';
 import { getEmbed } from '@/lib/embed';
 import { formatFollowers, formatEngagement, formatMoney, countryLabel } from '@/lib/format';
 import { es } from '@/lib/i18n';
+import { features } from '@/lib/flags';
 
 async function fetchProfile(username: string) {
   const trpc = await getServerTrpc();
@@ -163,7 +164,7 @@ export default async function PublicProfilePage({
         </Card>
       </div>
 
-      {profile.socialAccounts.some((a) => a.audienceTopCountry) && (
+      {features.audienceData && profile.socialAccounts.some((a) => a.audienceTopCountry) && (
         <Card className="mt-4">
           <h2 className="mb-3 font-bold text-gray-900">Audiencia</h2>
           <div className="space-y-4">

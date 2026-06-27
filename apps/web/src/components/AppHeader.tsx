@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useBootstrap, logout } from '@/lib/useBootstrap';
 import { NotificationBell } from '@/components/NotificationBell';
 import { es } from '@/lib/i18n';
+import { features } from '@/lib/flags';
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -32,7 +33,7 @@ export function AppHeader() {
           {canSearch && (
             <>
               <NavLink href="/search">{es.search.title}</NavLink>
-              <NavLink href="/match">Buscar con IA</NavLink>
+              {features.aiMatch && <NavLink href="/match">Buscar con IA</NavLink>}
             </>
           )}
           {role === 'creator' && (

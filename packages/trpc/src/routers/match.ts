@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Prisma } from '@repo/db';
-import { router, orgProcedure, rateLimit } from '../trpc';
+import { router, orgProcedure, rateLimit, requireFeature } from '../trpc';
 import { NICHES, NICHE_SLUGS, PLATFORM_SET, CONTENT_TYPES } from '../constants';
 import { buildCreatorWhere, CREATOR_CARD_INCLUDE, toCardPayload } from '../retrieval';
 import { matchScore } from '../matchScore';
@@ -77,6 +77,7 @@ interface Match {
 
 export const matchRouter = router({
   parseBrief: orgProcedure('can_search_creators')
+    .use(requireFeature('aiMatch'))
     .use(rateLimit({ key: 'match.parse', limit: 20, windowMs: 60_000 }))
     .input(z.object({ text: z.string().trim().min(1).max(1000) }))
     .mutation(async ({ ctx, input }): Promise<ParsedCriteria> => {
@@ -91,6 +92,7 @@ export const matchRouter = router({
     }),
 
   run: orgProcedure('can_search_creators')
+    .use(requireFeature('aiMatch'))
     .use(rateLimit({ key: 'match.run', limit: 10, windowMs: 60_000 }))
     .input(z.object({ criteria: criteriaSchema, limit: z.number().int().min(1).max(20).default(10) }))
     .query(async ({ ctx, input }) => {
@@ -157,6 +159,7 @@ export const matchRouter = router({
     }),
 
   feedback: orgProcedure('can_search_creators')
+    .use(requireFeature('aiMatch'))
     .input(z.object({ creatorId: z.string(), vote: z.enum(['up', 'down']), briefText: z.string().max(1000).optional() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.matchFeedback.upsert({

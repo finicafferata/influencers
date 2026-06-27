@@ -10,6 +10,7 @@ import { AudienceEditor } from '@/components/AudienceEditor';
 import { Button, Card, Field, Input, Textarea, Select, Chip, Spinner, Badge } from '@/components/ui';
 import { COUNTRIES } from '@/lib/format';
 import { es } from '@/lib/i18n';
+import { features } from '@/lib/flags';
 
 const CONTENT_LABELS: Record<string, string> = { ugc: 'UGC', influencer: 'Influencer', both: 'Ambos' };
 
@@ -217,7 +218,7 @@ export default function ProfileEditorPage() {
                   <span className="text-gray-600">@{s.handle} · {s.followers.toLocaleString('es')} {s.verified && <Badge color="green">{es.creator.verified}</Badge>}</span>
                   <button onClick={async () => { await removeSocial.mutateAsync({ id: (s as { id: string }).id }); utils.creator.getMine.invalidate(); }} className="text-gray-400 hover:text-red-600">✕</button>
                 </div>
-                <AudienceEditor account={s as Parameters<typeof AudienceEditor>[0]['account']} />
+                {features.audienceData && <AudienceEditor account={s as Parameters<typeof AudienceEditor>[0]['account']} />}
               </div>
             ))}
           </div>

@@ -1,6 +1,7 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import type { PrismaClientExtended } from '@repo/db';
 import { CAPABILITY_SET, type Capability } from './constants';
+import { FEATURES, type FeatureName } from './flags';
 import type { LlmClient } from './llm';
 
 export type Context = {
@@ -40,6 +41,20 @@ export function rateLimit(opts: { key: string; limit: number; windowMs: number }
       if (bucket.count > opts.limit) {
         throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Demasiadas solicitudes, probá más tarde' });
       }
+    }
+    return next();
+  });
+}
+
+/**
+ * Gate a procedure behind a feature flag. When the flag is OFF the procedure
+ * is unreachable (NOT_FOUND), so a flagged-off surface can't be driven even by
+ * a hand-crafted request — not just hidden in the UI. See ./flags.ts.
+ */
+export function requireFeature(name: FeatureName) {
+  return middleware(async ({ next }) => {
+    if (!FEATURES[name]) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Función no disponible' });
     }
     return next();
   });

@@ -11,6 +11,7 @@ import { CreatorFilters, type CreatorFilterState } from '@/components/CreatorFil
 import { ContactButton } from '@/components/ContactButton';
 import { Button, Card, Drawer, EmptyState, Spinner, Textarea, Badge } from '@/components/ui';
 import { es } from '@/lib/i18n';
+import { features } from '@/lib/flags';
 
 type Criteria = {
   niches: string[];
@@ -30,7 +31,9 @@ export default function MatchPage() {
   const router = useRouter();
   const { data: me, isError: meError } = useBootstrap();
   useEffect(() => {
-    if (meError) router.replace('/login');
+    // AI match is flagged off for v1 — the page is unreachable; send to search.
+    if (!features.aiMatch) router.replace('/search');
+    else if (meError) router.replace('/login');
     else if (me && !me.orgs.some((o) => o.capabilities.includes('can_search_creators'))) router.replace('/dashboard');
   }, [me, meError, router]);
 
@@ -47,6 +50,10 @@ export default function MatchPage() {
     { criteria: runCriteria ?? { niches: [] }, limit: 10 },
     { enabled: !!runCriteria, retry: false },
   );
+
+  // AI match flagged off for v1 — all hooks above run unconditionally (rules of
+  // hooks); the useEffect redirects, this just avoids a flash of the page.
+  if (!features.aiMatch) return null;
 
   function fsToCriteria(): Criteria {
     return {

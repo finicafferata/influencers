@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import type { Prisma } from '@repo/db';
-import { router, protectedProcedure, creatorProcedure, publicProcedure, rateLimit } from '../trpc';
+import { router, protectedProcedure, creatorProcedure, publicProcedure, rateLimit, requireFeature } from '../trpc';
 import { AGE_BAND_SET, GENDER_SET } from '../constants';
 import {
   usernameSchema,
@@ -253,6 +253,7 @@ export const creatorRouter = router({
 
   /** Self-declared per-account audience demographics. Editing resets verification. */
   setAudience: creatorProcedure
+    .use(requireFeature('audienceData'))
     .input(
       z.object({
         socialAccountId: z.string(),

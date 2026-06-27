@@ -4,6 +4,7 @@ import { NICHES, PLATFORMS } from '@repo/trpc/constants';
 import { Chip, Input, Select } from '@/components/ui';
 import { COUNTRIES } from '@/lib/format';
 import { es } from '@/lib/i18n';
+import { features } from '@/lib/flags';
 
 export interface CreatorFilterState {
   niches: string[];
@@ -49,13 +50,15 @@ export function CreatorFilters({
           {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
         </Select>
       </div>
-      <div>
-        <p className="mb-1 text-sm font-medium text-gray-700">Audiencia en…</p>
-        <Select value={value.audienceCountry} onChange={(e) => onChange({ ...value, audienceCountry: e.target.value })}>
-          <option value="">Cualquiera</option>
-          {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
-        </Select>
-      </div>
+      {features.audienceData && (
+        <div>
+          <p className="mb-1 text-sm font-medium text-gray-700">Audiencia en…</p>
+          <Select value={value.audienceCountry} onChange={(e) => onChange({ ...value, audienceCountry: e.target.value })}>
+            <option value="">Cualquiera</option>
+            {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+          </Select>
+        </div>
+      )}
       <div>
         <p className="mb-1 text-sm font-medium text-gray-700">{es.search.platform}</p>
         <Select value={value.platform} onChange={(e) => onChange({ ...value, platform: e.target.value })}>
