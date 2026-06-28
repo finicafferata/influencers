@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
@@ -9,9 +14,16 @@ import { TrpcModule } from './trpc/trpc.module';
 import { TrpcMiddleware } from './trpc/trpc.middleware';
 import { EmailModule } from './email/email.module';
 
+// Strict per-IP rate limiting in production; relaxed elsewhere so local dev and
+// the e2e suite (many logins from one IP) aren't throttled. Override with THROTTLE_LIMIT.
+const THROTTLE_LIMIT = Number(
+  process.env.THROTTLE_LIMIT ??
+    (process.env.NODE_ENV === 'production' ? 5 : 1000),
+);
+
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 5 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: THROTTLE_LIMIT }]),
     DatabaseModule,
     TrpcModule,
     EmailModule,
@@ -30,6 +42,8 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(TrpcMiddleware)
-      .forRoutes({ path: '/trpc*', method: RequestMethod.ALL });
+      // Express 5 / path-to-regexp v8 require named wildcards; the optional
+      // group matches both `/trpc` and `/trpc/<procedure>`.
+      .forRoutes({ path: '/trpc{/*path}', method: RequestMethod.ALL });
   }
 }

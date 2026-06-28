@@ -7,7 +7,9 @@ import { AuthService } from './auth.service';
 
 // ----- mock factories -----
 
-function makeFakeUser(overrides: Partial<{ id: string; email: string; name: string | null }> = {}) {
+function makeFakeUser(
+  overrides: Partial<{ id: string; email: string; name: string | null }> = {},
+) {
   return {
     id: 'user-1',
     email: 'test@example.com',
@@ -111,30 +113,29 @@ describe('AuthService', () => {
     expect(result).toEqual({ message: 'Magic link sent' });
   });
 
-  // 3. verifyMagicLink — returns isNewUser: true for new user (no name)
-  it('returns { token, isNewUser: true } for a user with no name', async () => {
+  // 3. verifyMagicLink — returns the session token and marks the token used.
+  // (isNewUser was removed — routing is decided by me.bootstrap; REVIEW-01 C2.)
+  it('returns { token } and marks the magic-link token used', async () => {
     fakePrisma.magicLinkToken.findUnique.mockResolvedValue(
       makeFakeToken({ user: makeFakeUser({ name: null }) }),
     );
 
     const result = await service.verifyMagicLink('abc123');
 
-    expect(result.isNewUser).toBe(true);
     expect(result.token).toBe('signed-jwt');
+    expect((result as Record<string, unknown>).isNewUser).toBeUndefined();
     expect(fakePrisma.magicLinkToken.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { used: true } }),
     );
   });
 
-  // 4. verifyMagicLink — returns isNewUser: false for returning user (has name)
-  it('returns { token, isNewUser: false } for a user with a name', async () => {
+  it('returns { token } regardless of whether the user has a name', async () => {
     fakePrisma.magicLinkToken.findUnique.mockResolvedValue(
       makeFakeToken({ user: makeFakeUser({ name: 'Alice' }) }),
     );
 
     const result = await service.verifyMagicLink('abc123');
 
-    expect(result.isNewUser).toBe(false);
     expect(result.token).toBe('signed-jwt');
   });
 

@@ -51,8 +51,16 @@ describe('EmailService', () => {
     });
 
     it('sendMagicLink logs to console and does NOT call resend.emails.send', async () => {
-      await service.sendMagicLink('user@example.com', 'https://example.com/magic');
-      expect(loggerLogSpy).toHaveBeenCalledTimes(1);
+      await service.sendMagicLink(
+        'user@example.com',
+        'https://example.com/magic',
+      );
+      // Dev mode emits two log lines: the dedicated magic-link line (so you can
+      // sign in locally) plus the shared [DEV EMAIL PREVIEW] line.
+      expect(loggerLogSpy).toHaveBeenCalledTimes(2);
+      expect(loggerLogSpy).toHaveBeenCalledWith(
+        '[DEV MAGIC LINK] user@example.com -> https://example.com/magic',
+      );
       expect(mockSend).not.toHaveBeenCalled();
     });
 
@@ -110,7 +118,10 @@ describe('EmailService', () => {
     });
 
     it('sendMagicLink calls resend.emails.send with correct args', async () => {
-      await service.sendMagicLink('user@example.com', 'https://example.com/magic');
+      await service.sendMagicLink(
+        'user@example.com',
+        'https://example.com/magic',
+      );
 
       expect(mockSend).toHaveBeenCalledTimes(1);
       expect(mockSend).toHaveBeenCalledWith(

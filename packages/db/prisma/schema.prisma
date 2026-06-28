@@ -25,6 +25,7 @@ model User {
   favorites       Favorite[]
   contactsSent    Contact[]
   notifications   Notification[]
+  matchFeedback   MatchFeedback[]
 }
 
 model Organization {
@@ -41,6 +42,7 @@ model Organization {
   members OrganizationMember[] @relation("OrgMembers")
   roster  TalentAgencyRoster[]
   lists   List[]
+  matchFeedback MatchFeedback[]
 }
 
 model OrganizationMember {
@@ -58,17 +60,25 @@ model OrganizationMember {
 }
 
 model CreatorProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  username    String   @unique
-  country     String?
-  city        String?
-  bio         String?
-  contentType String?
-  niches      String[]
-  rates       Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  username      String   @unique
+  country       String?
+  city          String?
+  headline      String?
+  pitch         String?
+  bio           String?
+  contentType   String?
+  niches        String[]
+  tags          String[] @default([])
+  rates         Json?
+  ratesPublic   Boolean  @default(true)
+  published     Boolean  @default(false)
+  viewCount     Int      @default(0)
+  maxFollowers  Int      @default(0)
+  maxEngagement Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user           User                 @relation(fields: [userId], references: [id])
   socialAccounts SocialAccount[]
@@ -78,28 +88,48 @@ model CreatorProfile {
   listItems      ListItem[]
   contactsReceived Contact[]          @relation("ContactToCreator")
   favoredBy      Favorite[]
+  matchFeedback  MatchFeedback[]
+
+  @@index([country])
+  @@index([contentType])
+  @@index([published])
+  @@index([maxFollowers])
+  @@index([maxEngagement])
 }
 
 model SocialAccount {
-  id             String  @id @default(cuid())
-  creatorId      String
-  platform       String
-  handle         String
-  followers      Int
-  engagementRate Float?
+  id                 String    @id @default(cuid())
+  creatorId          String
+  platform           String
+  handle             String
+  followers          Int
+  engagementRate     Float?
+  verified           Boolean   @default(false)
+  verificationSource String?
+  verifiedAt         DateTime?
+  audienceTopCountry String?
+  audienceCountries  Json?
+  audienceAges       Json?
+  audienceGender     Json?
+  audienceVerified   Boolean   @default(false)
+  audienceSource     String?
+  audienceVerifiedAt DateTime?
 
   creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@unique([creatorId, platform])
   @@index([creatorId])
+  @@index([audienceTopCountry])
 }
 
 model PortfolioItem {
-  id        String @id @default(cuid())
-  creatorId String
-  url       String
-  type      String
-  order     Int    @default(0)
+  id           String  @id @default(cuid())
+  creatorId    String
+  url          String
+  type         String
+  title        String?
+  thumbnailUrl String?
+  order        Int     @default(0)
 
   creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
@@ -227,4 +257,39 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model MatchFeedback {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String
+  creatorId String
+  vote      String
+  briefText String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org     Organization   @relation(fields: [orgId], references: [id])
+  user    User           @relation(fields: [userId], references: [id])
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, creatorId])
+  @@index([orgId])
+  @@index([creatorId])
+}
+
+/// Append-only funnel/analytics log for launch validation
+/// (publish → search → contact → response). Intentionally FK-free so recording
+/// is fire-and-forget (never blocks a request) and history survives row deletes.
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String // profile_published | search_performed | contact_sent | contact_responded
+  userId    String? // actor (null for anonymous/public)
+  orgId     String? // acting org, when relevant
+  creatorId String? // subject creator, when relevant
+  meta      Json? // small extras: { status }, { total, hasFilters }, …
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([createdAt])
 }

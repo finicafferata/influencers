@@ -14,7 +14,8 @@ import { JwtStrategy } from './jwt.strategy';
     JwtModule.registerAsync({
       useFactory: () => {
         const secret = process.env.JWT_SECRET;
-        if (!secret) throw new Error('JWT_SECRET environment variable is required');
+        if (!secret)
+          throw new Error('JWT_SECRET environment variable is required');
         return { secret, signOptions: { expiresIn: '7d' } };
       },
     }),
@@ -22,7 +23,15 @@ import { JwtStrategy } from './jwt.strategy';
     EmailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  // Google OAuth is optional: only register the strategy when creds are present
+  // so magic-link login works without GOOGLE_CLIENT_ID/SECRET (see docs/LOCAL-DEV.md).
+  providers: [
+    AuthService,
+    JwtStrategy,
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [GoogleStrategy]
+      : []),
+  ],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Shared workspace packages ship as TS source; let Next compile them.
+  transpilePackages: ["@repo/trpc"],
 };
 
 export default nextConfig;

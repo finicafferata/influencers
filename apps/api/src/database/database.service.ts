@@ -1,12 +1,12 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { prisma } from '@repo/db';
-import type { PrismaClient } from '@repo/db';
+import type { PrismaClientExtended } from '@repo/db';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
-  protected readonly client: PrismaClient = prisma;
+  protected readonly client: PrismaClientExtended = prisma;
 
-  get db(): PrismaClient {
+  get db(): PrismaClientExtended {
     return this.client;
   }
 

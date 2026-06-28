@@ -1,9 +1,17 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 export default function VerifyPage() {
+  return (
+    <Suspense fallback={<main className="flex min-h-screen items-center justify-center" />}>
+      <VerifyInner />
+    </Suspense>
+  );
+}
+
+function VerifyInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -21,20 +29,15 @@ export default function VerifyPage() {
         const res = await fetch(
           `/api/auth/verify?token=${encodeURIComponent(token!)}`,
         );
-        const data = (await res.json()) as {
-          isNewUser?: boolean;
-          message?: string;
-        };
+        const data = (await res.json()) as { message?: string };
 
         if (!res.ok) {
           throw new Error(data.message ?? 'Token inválido o expirado');
         }
 
-        if (data.isNewUser) {
-          router.replace('/onboarding/role');
-        } else {
-          router.replace('/dashboard');
-        }
+        // Routing by role is handled at /dashboard via me.bootstrap
+        // (role === 'none' is redirected to onboarding).
+        router.replace('/dashboard');
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Error al verificar el enlace',

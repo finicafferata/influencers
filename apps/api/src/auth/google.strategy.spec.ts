@@ -5,7 +5,9 @@ import type { Profile } from 'passport-google-oauth20';
 
 // Suppress PassportStrategy super() calls from making real network calls
 jest.mock('passport-google-oauth20', () => {
-  const original = jest.requireActual<typeof import('passport-google-oauth20')>('passport-google-oauth20');
+  const original = jest.requireActual<typeof import('passport-google-oauth20')>(
+    'passport-google-oauth20',
+  );
   return {
     ...original,
     Strategy: class {
@@ -30,12 +32,14 @@ function makeProfile(overrides: Partial<Profile> = {}): Profile {
   return { ...base, ...overrides };
 }
 
-function makeFakeUser(overrides: Partial<{
-  id: string;
-  email: string;
-  name: string | null;
-  avatar: string | null;
-}> = {}) {
+function makeFakeUser(
+  overrides: Partial<{
+    id: string;
+    email: string;
+    name: string | null;
+    avatar: string | null;
+  }> = {},
+) {
   return {
     id: 'user-1',
     email: 'test@example.com',
@@ -102,7 +106,11 @@ describe('GoogleStrategy', () => {
       fakePrisma.user.create.mockResolvedValue(newUser);
 
       const profile = makeProfile();
-      const result = await strategy.validate('access-token', 'refresh-token', profile);
+      const result = await strategy.validate(
+        'access-token',
+        'refresh-token',
+        profile,
+      );
 
       expect(fakePrisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
@@ -118,27 +126,49 @@ describe('GoogleStrategy', () => {
     });
 
     it('returns existing user without overwriting name when user already has a name', async () => {
-      const existingUser = makeFakeUser({ id: 'existing-user-id', name: 'Existing Name' });
+      const existingUser = makeFakeUser({
+        id: 'existing-user-id',
+        name: 'Existing Name',
+      });
       // findUnique returns an existing user with a name → no update
       fakePrisma.user.findUnique.mockResolvedValue(existingUser);
 
       const profile = makeProfile({ displayName: 'Google Name' });
-      const result = await strategy.validate('access-token', 'refresh-token', profile);
+      const result = await strategy.validate(
+        'access-token',
+        'refresh-token',
+        profile,
+      );
 
       expect(fakePrisma.user.findUnique).toHaveBeenCalledTimes(1);
       expect(fakePrisma.user.create).not.toHaveBeenCalled();
       expect(fakePrisma.user.update).not.toHaveBeenCalled();
-      expect(result).toEqual({ id: existingUser.id, email: existingUser.email });
+      expect(result).toEqual({
+        id: existingUser.id,
+        email: existingUser.email,
+      });
     });
 
     it('pre-fills name and avatar for magic-link-first users who have no name', async () => {
-      const existingUserNoName = makeFakeUser({ id: 'ml-user-id', name: null, avatar: null });
-      const updatedUser = makeFakeUser({ id: 'ml-user-id', name: 'Test User', avatar: 'https://example.com/avatar.jpg' });
+      const existingUserNoName = makeFakeUser({
+        id: 'ml-user-id',
+        name: null,
+        avatar: null,
+      });
+      const updatedUser = makeFakeUser({
+        id: 'ml-user-id',
+        name: 'Test User',
+        avatar: 'https://example.com/avatar.jpg',
+      });
       fakePrisma.user.findUnique.mockResolvedValue(existingUserNoName);
       fakePrisma.user.update.mockResolvedValue(updatedUser);
 
       const profile = makeProfile();
-      const result = await strategy.validate('access-token', 'refresh-token', profile);
+      const result = await strategy.validate(
+        'access-token',
+        'refresh-token',
+        profile,
+      );
 
       expect(fakePrisma.user.update).toHaveBeenCalledWith({
         where: { id: 'ml-user-id' },
@@ -173,7 +203,9 @@ describe('GoogleStrategy', () => {
             },
           ],
         }).compile(),
-      ).rejects.toThrow('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required');
+      ).rejects.toThrow(
+        'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required',
+      );
     });
 
     it('throws if GOOGLE_CLIENT_SECRET is missing', async () => {
@@ -189,7 +221,9 @@ describe('GoogleStrategy', () => {
             },
           ],
         }).compile(),
-      ).rejects.toThrow('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required');
+      ).rejects.toThrow(
+        'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required',
+      );
     });
   });
 });

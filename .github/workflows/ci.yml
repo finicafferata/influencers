@@ -8,15 +8,13 @@ on:
 
 jobs:
   build:
-    name: Build & Lint
+    name: Build (typecheck)
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
@@ -32,5 +30,96 @@ jobs:
       - name: Build all packages
         run: pnpm build
 
+      # Pure-function unit tests (matchScore, buildCreatorWhere, recompute
+      # aggregates). No DB needed; runs under the required "Build" gate.
+      - name: Unit tests
+        run: pnpm test
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    # Real gate: the MVP-PUNCHLIST §2.8 lint failures are fixed (test-file
+    # override for no-unsafe-*, _-prefixed unused args, src-only glob).
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm --filter=db db:generate
       - name: Lint
         run: pnpm lint
+
+  e2e:
+    name: E2E (boot + core loop)
+    runs-on: ubuntu-latest
+    # The build typecheck gate must be green first (Constitution II).
+    needs: build
+
+    # NODE_ENV=development: installs devDeps, and makes the API boot without a
+    # mail/LLM/OAuth provider (Constitution V — optional means optional).
+    env:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/creatorlink?schema=public
+      JWT_SECRET: ci-dev-secret-not-for-production
+      PORT: "3002"
+      API_URL: http://localhost:3002
+      WEB_URL: http://localhost:3000
+      APP_URL: http://localhost:3000
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: creatorlink
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter=db db:generate
+
+      - name: Apply migrations
+        run: pnpm --filter @repo/db db:migrate:deploy
+
+      - name: Seed database
+        run: pnpm --filter @repo/db exec prisma db seed
+
+      - name: Install Playwright browser
+        run: pnpm --filter @repo/web exec playwright install --with-deps chromium
+
+      # Playwright's webServer boots the API (:3002) and web (:3000), waits for both,
+      # then runs the auth + core-loop specs. Fails the build on any failure.
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

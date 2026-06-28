@@ -35,30 +35,17 @@ export default function LoginPage() {
 
   if (submitted) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <svg
-              className="h-6 w-6 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
+      <main className="flex min-h-screen items-center justify-center bg-canvas px-4">
+        <div className="w-full max-w-md rounded-card border border-line bg-surface p-8 text-center shadow-card">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
+            <svg className="h-6 w-6 text-accent-strong" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">
-            Revisa tu correo
-          </h1>
-          <p className="text-gray-600">
+          <h1 className="mb-2 text-2xl font-bold tracking-tight text-ink">Revisá tu correo</h1>
+          <p className="text-muted">
             Te enviamos un enlace de acceso a{' '}
-            <span className="font-medium text-gray-900">{email}</span>. El
-            enlace expira en 15 minutos.
+            <span className="font-medium text-ink">{email}</span>. Expira en 15 minutos.
           </p>
         </div>
       </main>
@@ -66,21 +53,18 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">
-          Iniciar sesión
-        </h1>
-        <p className="mb-6 text-gray-500">
-          Ingresa tu correo y te enviaremos un enlace de acceso.
-        </p>
+    <main className="flex min-h-screen items-center justify-center bg-canvas px-4">
+      <div className="w-full max-w-md rounded-card border border-line bg-surface p-8 shadow-card">
+        <span className="mb-6 flex items-center gap-2 text-lg font-bold tracking-tight text-ink">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-accent" />
+          CreatorLink
+        </span>
+        <h1 className="mb-2 text-2xl font-bold tracking-tight text-ink">Iniciar sesión</h1>
+        <p className="mb-6 text-muted">Ingresá tu correo y te enviamos un enlace de acceso.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label
-              htmlFor="email"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-ink-soft">
               Correo electrónico
             </label>
             <input
@@ -90,34 +74,30 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@correo.com"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+              className="w-full rounded-lg border border-line bg-surface px-4 py-2.5 text-ink placeholder:text-faint transition-colors focus:border-accent focus:outline-none"
             />
           </div>
 
-          {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-700">
-              {error}
-            </p>
-          )}
+          {error && <p className="rounded-lg bg-rose-50 px-4 py-2.5 text-sm text-rose-700">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-60"
+            className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg shadow-sm transition-all hover:bg-accent-strong active:scale-[.98] disabled:opacity-60"
           >
-            {loading ? 'Enviando...' : 'Enviar link de acceso'}
+            {loading ? 'Enviando…' : 'Enviar link de acceso'}
           </button>
         </form>
 
         <div className="mt-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-sm text-gray-400">o</span>
-          <div className="h-px flex-1 bg-gray-200" />
+          <div className="h-px flex-1 bg-line" />
+          <span className="text-sm text-faint">o</span>
+          <div className="h-px flex-1 bg-line" />
         </div>
 
         <a
           href="/api/auth/google"
-          className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+          className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:bg-line-soft"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

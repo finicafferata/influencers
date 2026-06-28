@@ -1,3 +1,4 @@
+import 'dotenv/config'; // load apps/api/.env in local dev (no-op when env comes from the platform)
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -12,4 +13,4 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3001);
   console.log(`API running on port ${process.env.PORT ?? 3001}`);
 }
-bootstrap();
+void bootstrap();
