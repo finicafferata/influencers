@@ -38,10 +38,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    # Isolated from the build/e2e gates: `pnpm lint` currently has pre-existing
-    # failures in the API test files (MVP-PUNCHLIST §2.8). Kept visible here so
-    # it gets fixed, without blocking the green build + e2e gates.
-    continue-on-error: true
+    # Real gate: the MVP-PUNCHLIST §2.8 lint failures are fixed (test-file
+    # override for no-unsafe-*, _-prefixed unused args, src-only glob).
 
     steps:
       - uses: actions/checkout@v4
