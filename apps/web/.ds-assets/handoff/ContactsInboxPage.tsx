@@ -8,6 +8,8 @@ import { es } from '@/lib/i18n';
 
 /**
  * Refreshed Contacts / inbox — two-pane master-detail.
+ * Replaces the single-column card list at
+ *   apps/web/src/app/dashboard/contacts/page.tsx
  *
  * Uses the SAME tRPC hooks and data shape as before
  * (contact.listForCreator + contact.updateStatus). Adds:
@@ -16,6 +18,8 @@ import { es } from '@/lib/i18n';
  *  - accept/decline live in the detail pane
  *
  * Fields referenced on each item: id, orgName, message, campaignBrief, status.
+ * (Budget / format / plazo facts shown in the HTML mock are illustrative —
+ *  wire them up only if your contact schema carries them.)
  */
 
 type Status = 'pending' | 'accepted' | 'declined';

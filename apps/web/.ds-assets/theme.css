@@ -1,0 +1,74 @@
+/* CreatorLink design-system stylesheet for the Claude Design bundle.
+   Mirrors apps/web/src/app/globals.css, but the @theme font tokens point
+   directly at the real families (the app's globals.css indirects through
+   --font-hanken/-bricolage/-geist-mono, which only next/font defines at
+   runtime — absent here, so we bind the families straight). @font-face for
+   those families ships via cfg.extraFonts (.ds-assets/fonts.css).
+   @source directives tell Tailwind v4 which files to scan for utilities:
+   the DS components and the authored preview compositions. */
+@import "tailwindcss" source(none);
+
+@source "../src/components/**/*.{ts,tsx}";
+@source "./handoff/**/*.{ts,tsx}";
+@source "../../../.design-sync/previews/**/*.{ts,tsx}";
+
+@theme {
+  /* surfaces & ink (monochrome) */
+  --color-canvas: #fafafa;
+  --color-surface: #ffffff;
+  --color-ink: #09090b;
+  --color-ink-soft: #3f3f46;
+  --color-muted: #71717a;
+  --color-faint: #a1a1aa;
+  --color-line: #e4e4e7;
+  --color-line-soft: #f4f4f5;
+
+  /* accent (electric violet) */
+  --color-accent: #6d5efc;
+  --color-accent-strong: #5642e8;
+  --color-accent-fg: #ffffff;
+  --color-accent-soft: #eeecff;
+  --color-accent-soft-fg: #4a37c9;
+
+  /* radii & shadow */
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(9 9 11 / 0.04), 0 4px 16px rgb(9 9 11 / 0.04);
+  --shadow-pop: 0 8px 30px rgb(9 9 11 / 0.12);
+
+  /* type — real families (app indirects these through next/font vars) */
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "Hanken Grotesk", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}

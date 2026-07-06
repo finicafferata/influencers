@@ -66,8 +66,6 @@ export function CreatorCard({
   );
 
   if (onClick) {
-    // role=button (not <button>) so the footer can contain its own buttons /
-    // <details> without invalid nested-interactive HTML / hydration mismatch.
     return (
       <div
         role="button"

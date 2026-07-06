@@ -41,7 +41,7 @@ export default function OrgOnboardingPage() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">{es.org.onboarding}</h1>
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-ink">{es.org.onboarding}</h1>
       <Card>
         <Field label={es.org.name}>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Mi Marca SA" />
@@ -52,7 +52,7 @@ export default function OrgOnboardingPage() {
               <option key={d.value} value={d.value}>{d.label}</option>
             ))}
           </Select>
-          <p className="mt-1 text-xs text-gray-500">Podrás buscar y contactar creadores.</p>
+          <p className="mt-1 text-xs text-muted">Podrás buscar y contactar creadores.</p>
         </Field>
         <Field label={es.creator.country}>
           <Select value={country} onChange={(e) => setCountry(e.target.value)}>

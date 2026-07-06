@@ -8,10 +8,16 @@ import { es } from '@/lib/i18n';
 
 /**
  * Refreshed role-selection step.
+ * Replaces apps/web/src/app/onboarding/role/page.tsx
  *
  * Changes: selectable cards (violet ring on the active choice) instead of
- * navigate-on-click, a subtitle, and a Continuar CTA. Navigation targets
- * unchanged (/onboarding/creator, /onboarding/org).
+ * navigate-on-click, a subtitle, and a Continuar CTA — matching the stepper
+ * onboarding flow in the HTML reference. Navigation targets unchanged.
+ *
+ * If you keep the multi-page onboarding (role → creator/org), the "Continuar"
+ * button routes to the chosen sub-flow. The full stepper (role → profile →
+ * publish) in the HTML mock is optional — adopt it only if you want a single
+ * onboarding route.
  */
 export default function RolePage() {
   const router = useRouter();
