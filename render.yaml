@@ -21,8 +21,12 @@ services:
     plan: free
     region: virginia # us-east, matches the Neon us-east-1 DB for low latency
     rootDir: .
-    buildCommand: npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile && pnpm --filter=db db:generate && pnpm --filter=api build
-    startCommand: pnpm --filter=db db:migrate:deploy && node apps/api/dist/main
+    # Render provides pnpm natively (detects pnpm-lock.yaml) — installing it
+    # globally fails on Render's read-only /usr/lib, so call pnpm directly.
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter=db db:generate && pnpm --filter=api build
+    # @repo/db ships as TS source, so run the compiled API under tsx to resolve
+    # its extensionless TS imports (same as local dev / e2e).
+    startCommand: pnpm --filter=db db:migrate:deploy && node --import tsx apps/api/dist/main
     envVars:
       - key: NODE_VERSION
         value: "20"

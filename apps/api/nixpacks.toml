@@ -20,4 +20,4 @@ cmds = ['pnpm --filter=db db:generate', 'pnpm --filter=api build']
 # safe to run on every deploy. Kept in `start` (not `build`) so it runs when the
 # database is reachable, not during the build.
 [start]
-cmd = 'pnpm --filter=db db:migrate:deploy && node apps/api/dist/main'
+cmd = 'pnpm --filter=db db:migrate:deploy && node --import tsx apps/api/dist/main'
