@@ -4,13 +4,15 @@
   "private": true,
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./constants": "./src/constants.ts"
+  },
+  "scripts": {
+    "test": "node --import tsx --test src/*.test.ts"
   },
   "dependencies": {
+    "@repo/db": "workspace:*",
     "@trpc/server": "^11.0.0",
     "zod": "^3.22.0"
-  },
-  "peerDependencies": {
-    "@repo/db": "workspace:*"
   }
 }

@@ -1,0 +1,23 @@
+# Railway build config for apps/api (NestJS)
+#
+# IMPORTANT: In the Railway UI, set the service root directory to the REPO ROOT (/),
+# then add this environment variable to the Railway service:
+#   NIXPACKS_CONFIG_FILE=apps/api/nixpacks.toml
+#
+# This ensures pnpm install has access to the monorepo lockfile and all workspace packages.
+
+[phases.setup]
+nixPkgs = ['nodejs_20']
+
+[phases.install]
+cmds = ['npm install -g pnpm@9.0.0', 'pnpm install --frozen-lockfile']
+
+[phases.build]
+cmds = ['pnpm --filter=db db:generate', 'pnpm --filter=api build']
+
+# Run pending Prisma migrations before booting, then start the server.
+# `migrate deploy` is idempotent (no-op when the DB is already current), so it is
+# safe to run on every deploy. Kept in `start` (not `build`) so it runs when the
+# database is reachable, not during the build.
+[start]
+cmd = 'pnpm --filter=db db:migrate:deploy && node apps/api/dist/main'

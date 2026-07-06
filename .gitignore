@@ -17,6 +17,10 @@ build/
 # Turbo cache
 .turbo/
 
+# Playwright test artifacts
+test-results/
+playwright-report/
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -24,3 +28,11 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# design-sync
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+apps/web/.ds-assets/compiled.css

@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ──────────────────────────────────────────────────────────────
+   CreatorLink design system — clean monochrome + electric accent
+   Base is a zinc monochrome scale; one punchy violet accent carries
+   emphasis (CTAs, active states, links, focus rings, positive badges).
+   Type: Bricolage Grotesque (headings) · Hanken Grotesk (body/UI) ·
+   Geist Mono (metrics & codes).
+   ────────────────────────────────────────────────────────────── */
+@theme {
+  /* surfaces & ink (monochrome) */
+  --color-canvas: #fafafa;        /* page background */
+  --color-surface: #ffffff;       /* cards / panels */
+  --color-ink: #09090b;           /* primary text / dark fills (zinc-950) */
+  --color-ink-soft: #3f3f46;      /* zinc-700 */
+  --color-muted: #71717a;         /* zinc-500 secondary text */
+  --color-faint: #a1a1aa;         /* zinc-400 placeholders */
+  --color-line: #e4e4e7;          /* zinc-200 borders */
+  --color-line-soft: #f4f4f5;     /* zinc-100 hairlines / hovers */
+
+  /* accent (electric violet) */
+  --color-accent: #6d5efc;
+  --color-accent-strong: #5642e8; /* hover / text-on-light */
+  --color-accent-fg: #ffffff;
+  --color-accent-soft: #eeecff;   /* tinted badge bg */
+  --color-accent-soft-fg: #4a37c9;
+
+  /* radii & shadow */
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(9 9 11 / 0.04), 0 4px 16px rgb(9 9 11 / 0.04);
+  --shadow-pop: 0 8px 30px rgb(9 9 11 / 0.12);
+
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-hanken), sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* headings use the display face (Bricolage Grotesque) */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* accent-tinted text selection */
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+/* consistent, accessible focus ring (accent) */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* nicer scrollbars on supported browsers */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
 }
