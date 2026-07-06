@@ -1,4 +1,5 @@
 {
+  "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter=db db:generate && next build"
 }
