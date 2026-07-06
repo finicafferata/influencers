@@ -1,0 +1,50 @@
+# Render Blueprint — apps/api (NestJS) on the free tier.
+#
+# Setup:
+#   1. Create a Neon Postgres DB (neon.tech) and copy its DIRECT connection
+#      string (the non-pooled one), which ends with `?sslmode=require`.
+#   2. In Render: New → Blueprint → connect the GitHub repo. Render reads this file.
+#   3. Fill the env vars marked `sync: false` in the Render dashboard
+#      (DATABASE_URL = the Neon string from step 1).
+#   4. After it deploys, copy the service URL (https://creatorlink-api.onrender.com)
+#      into Vercel as API_URL and NEXT_PUBLIC_API_URL, and back here as WEB_URL
+#      (your Vercel URL) so CORS passes.
+#
+# Note: the free plan sleeps after ~15 min idle; the first request after that
+# takes ~30-50s to wake. Migrations run on every boot (idempotent no-op when
+# already applied), so a fresh Neon DB gets its schema automatically.
+
+services:
+  - type: web
+    name: creatorlink-api
+    runtime: node
+    plan: free
+    region: virginia # us-east, matches the Neon us-east-1 DB for low latency
+    rootDir: .
+    buildCommand: npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile && pnpm --filter=db db:generate && pnpm --filter=api build
+    startCommand: pnpm --filter=db db:migrate:deploy && node apps/api/dist/main
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Neon DIRECT connection string (…?sslmode=require) — set in dashboard
+      - key: DATABASE_URL
+        sync: false
+      # Auto-generated 32+ char secret for magic-link JWTs
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      # Your Vercel URL, e.g. https://creatorlink.vercel.app (CORS origin)
+      - key: WEB_URL
+        sync: false
+      # v1 feature flags — keep in sync with the NEXT_PUBLIC_* ones on Vercel
+      - key: FEATURE_MEDIA_KIT
+        value: "on"
+      - key: FEATURE_AI_MATCH
+        value: "off"
+      - key: FEATURE_AUDIENCE_DATA
+        value: "off"

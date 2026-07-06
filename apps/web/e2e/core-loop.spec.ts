@@ -42,8 +42,10 @@ test('brand → creator heartbeat: search, contact, accept', async ({ page, cont
   // 6. The proposal shows up and can be accepted.
   await page.goto('/dashboard/contacts');
   await expect(page.getByText('Propuestas recibidas')).toBeVisible();
-  await expect(page.getByText(marker)).toBeVisible();
-  await expect(page.getByText('Cosmética Natural SA')).toBeVisible();
+  // The redesigned contacts page shows each proposal in both the list preview
+  // and the detail pane, so the marker/org text matches twice — assert on the first.
+  await expect(page.getByText(marker).first()).toBeVisible();
+  await expect(page.getByText('Cosmética Natural SA').first()).toBeVisible();
 
   await page.getByRole('button', { name: 'Aceptar' }).first().click();
   await expect(page.getByText('Aceptada').first()).toBeVisible();

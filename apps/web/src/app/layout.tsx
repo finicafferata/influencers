@@ -1,13 +1,22 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Bricolage_Grotesque, Hanken_Grotesk, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { TrpcProvider } from '@/components/providers/TrpcProvider';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+// Display face — headings (mapped to --font-display in globals.css)
+const bricolage = Bricolage_Grotesque({
+  variable: '--font-bricolage',
+  subsets: ['latin'],
+  weight: ['500', '600', '700', '800'],
+});
+
+// Body / UI face (mapped to --font-sans in globals.css)
+const hanken = Hanken_Grotesk({
+  variable: '--font-hanken',
   subsets: ['latin'],
 });
 
+// Metrics & codes (mapped to --font-mono in globals.css)
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
@@ -25,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${bricolage.variable} ${hanken.variable} ${geistMono.variable} antialiased`}>
         <TrpcProvider>{children}</TrpcProvider>
       </body>
     </html>

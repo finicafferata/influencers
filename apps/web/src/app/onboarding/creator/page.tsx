@@ -113,7 +113,7 @@ export default function CreatorOnboardingPage() {
 
   return (
     <main className="mx-auto max-w-xl px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">{es.creator.onboarding}</h1>
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-ink">{es.creator.onboarding}</h1>
       <Stepper steps={STEPS} current={step} />
 
       <Card>
@@ -141,7 +141,7 @@ export default function CreatorOnboardingPage() {
         {step === 1 && (
           <>
             {socials.map((s, i) => (
-              <div key={i} className="mb-4 grid grid-cols-2 gap-2 rounded-lg border border-gray-100 p-3">
+              <div key={i} className="mb-4 grid grid-cols-2 gap-2 rounded-lg border border-line-soft p-3">
                 <Select
                   value={s.platform}
                   onChange={(e) => setSocials((cur) => cur.map((x, j) => (j === i ? { ...x, platform: e.target.value } : x)))}
@@ -213,7 +213,7 @@ export default function CreatorOnboardingPage() {
               <div className="space-y-2">
                 {RATE_KEYS.map((r) => (
                   <div key={r.key} className="flex items-center gap-2">
-                    <span className="w-32 text-sm text-gray-600">{r.label}</span>
+                    <span className="w-32 text-sm text-muted">{r.label}</span>
                     <Input
                       type="number"
                       placeholder="desde"
@@ -245,7 +245,7 @@ export default function CreatorOnboardingPage() {
         </div>
       </Card>
       {profileCreated && step > 0 && (
-        <p className="mt-3 text-center text-xs text-gray-400">Borrador guardado automáticamente</p>
+        <p className="mt-3 text-center text-xs text-faint">Borrador guardado automáticamente</p>
       )}
     </main>
   );

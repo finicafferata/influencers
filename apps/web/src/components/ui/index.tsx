@@ -134,7 +134,19 @@ export function Card({ className, children }: { className?: string; children: Re
   );
 }
 
-export function Avatar({ src, name, size = 48 }: { src?: string | null; name?: string | null; size?: number }) {
+export function Avatar({
+  src,
+  name,
+  size = 48,
+  accent = false,
+}: {
+  src?: string | null;
+  name?: string | null;
+  size?: number;
+  // Use the violet accent for the initials fallback instead of ink — keeps the
+  // avatar legible when it sits on a dark surface (e.g. the profile cover band).
+  accent?: boolean;
+}) {
   const initials = (name ?? '?').trim().slice(0, 1).toUpperCase();
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
@@ -151,7 +163,7 @@ export function Avatar({ src, name, size = 48 }: { src?: string | null; name?: s
   }
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-ink font-semibold text-white"
+      className={cx('flex items-center justify-center rounded-full font-semibold text-white', accent ? 'bg-accent' : 'bg-ink')}
       style={{ width: size, height: size, fontSize: size / 2.4 }}
     >
       {initials}
